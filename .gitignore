@@ -1,0 +1,30 @@
+# Next.js build and cache
+/frontend/node_modules/
+/frontend/.next/
+/frontend/out/
+/frontend/build/
+
+# Python environment and cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+/backend/venv/
+/backend/env/
+/backend/.venv/
+
+# SQLite databases and logs
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+thb_dev.db
+backend/thb_dev.db
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
