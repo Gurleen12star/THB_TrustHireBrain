@@ -254,3 +254,44 @@ export async function parseJobDescription(file?: File): Promise<ParseResponse> {
     throw error;
   }
 }
+
+export async function createJobDescription(payload: {
+  title: string;
+  location: string;
+  department: string;
+  experience_required: string;
+  description: string;
+}): Promise<JobDescription> {
+  const res = await fetch(`${API_BASE_URL}/dashboard/job-description`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error("Failed to create job description");
+  return await res.json() as JobDescription;
+}
+
+export async function uploadJobDescriptionFile(payload: {
+  title: string;
+  location: string;
+  department: string;
+  experience_required: string;
+  file: File;
+}): Promise<JobDescription> {
+  const formData = new FormData();
+  formData.append("file", payload.file);
+  
+  const params = new URLSearchParams({
+    title: payload.title,
+    location: payload.location,
+    department: payload.department,
+    experience_required: payload.experience_required
+  });
+
+  const res = await fetch(`${API_BASE_URL}/dashboard/job-description/upload?${params.toString()}`, {
+    method: "POST",
+    body: formData
+  });
+  if (!res.ok) throw new Error("Failed to upload job description");
+  return await res.json() as JobDescription;
+}
