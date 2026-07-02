@@ -199,6 +199,27 @@ def upload_job_description(
     db.refresh(new_job)
     return new_job
 
+class SkillUpdate(BaseModel):
+    type: str
+    score: int
+
+@router.put("/job-description/skill/{skill_id}")
+def update_job_skill(skill_id: int, payload: SkillUpdate, db: Session = Depends(get_db)):
+    skill = db.query(JobSkill).filter(JobSkill.id == skill_id).first()
+    if not skill:
+        raise HTTPException(status_code=404, detail="Skill not found")
+    skill.type = payload.type
+    skill.score = payload.score
+    db.commit()
+    db.refresh(skill)
+    return {
+        "id": skill.id,
+        "job_id": skill.job_id,
+        "name": skill.name,
+        "type": skill.type,
+        "score": skill.score
+    }
+
 @router.get("/candidates", response_model=List[CandidateSchema])
 def get_candidates(
     search: Optional[str] = Query(None),
