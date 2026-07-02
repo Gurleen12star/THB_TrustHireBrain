@@ -1,4 +1,10 @@
-# 🧠 TrustHireBrain (THB) — AI Hiring Intelligence Platform
+# 🧠 TrustHireBrain (THB)
+
+### Beyond Resume Matching — Trustworthy AI Hiring Intelligence
+
+An Explainable AI Hiring Intelligence Platform that builds Candidate Intelligence Profiles, understands job requirements, infers missing skills, analyzes career evolution, validates trust, and predicts hiring potential using multi-intelligence reasoning.
+
+🏆 **Built for India Runs x Redrob AI Challenge 2026**
 
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 15" />
@@ -11,85 +17,190 @@
 
 ---
 
-## 🎯 Platform Philosophy & Mission
+## 2. Problem Statement
 
-> **Traditional systems answer:** *"Who looks similar?"* (Static resume keyword matchers).  
-> **TrustHireBrain answers:** *"Who has the highest hiring potential, and why?"* (Explainable AI matchmaking).
+Traditional Applicant Tracking Systems (ATS) rely on surface-level keyword frequency matchers. This creates a flawed matching pipeline:
 
-TrustHireBrain (THB) is a production-quality, explainable AI hiring intelligence platform. It replaces shallow keyword-matching filters with a semantic matchmaking algorithm that evaluates candidates across capability, trust verifications, experience depth, and adaptability, rendering explainable candidate ratings directly to recruitment dashboards.
+```text
+Traditional ATS: 
+Job Description Keywords ──> Resume Scanning ──> Match Score (Regex Count) ──> Top Ranked Candidates
+```
+
+### Critical Bottlenecks of Legacy Systems:
+*   **Misses Hidden/Adjacent Skills:** Candidates with rich experience might use different synonyms or fail to list exact acronyms (e.g., matching "Deep Learning" but missing "Neural Networks").
+*   **Zero Explainability:** Algorithms yield black-box scores with no context or breakdown, leaving hiring managers to manually verify suitability.
+*   **Ignores Experience Trust:** Treats self-reported resume bullets as absolute truths without verifying credentials or detecting anomalies.
+*   **Ignores Career Growth Evolution:** Fails to analyze progression speed, company prestige, or trajectory changes over time.
+*   **No Reasoning Capabilities:** Lacks multi-dimensional evaluation of soft skills, execution capabilities, and leadership alignment.
 
 ---
 
-## 🚀 Key Feature Modules
+## 3. Our Solution: Semantic Multi-Intelligence Reasoning
 
-*   **Requirement Intelligence Engine (`/job-descriptions`):** Direct manual JD entry and file upload pipelines (`.pdf`, `.docx`, `.txt`) with animated requirements graphs, live priority adjustments, and weight-tuning syncs.
-*   **Candidate Intelligence Engine (`/candidates`):** High-density grids and tables showing candidate details, trust levels, experience, and custom popup modals to register new candidate profiles into the database.
-*   **Dynamic Matching Workspace (`/new-analysis`):** Multi-weight sliders (Technical, Leadership, Trust, Adaptability, Behavioral) which recalculate candidate matching potential and sort the shortlist in real-time.
-*   **Interactive Requirement Graphs (`/skill-graph`):** SVG-rendered dependency trees representing required vs. preferred technologies.
-*   **Side-by-Side Comparisons (`/compare`):** Multi-column dashboard to compare candidate capability scores and risk indices.
+TrustHireBrain replaces simple filters with a multi-layered semantic evaluation pipeline:
+
+```text
+Job Description ──> Requirement Graph ──> Knowledge Graph ──> Skill Inference 
+      │
+      └──> Candidate Profile ──> Career Evolution ──> Technology Timeline ──> Hiring Potential & Trust Rating
+```
+
+Rather than checking for exact string occurrences, THB models candidate suitability across 8 core intelligence dimensions, weighting evidence dynamically against the requirement graph to explain exactly **why** a candidate is suitable.
 
 ---
 
-## 📊 Technical Architecture
+## 4. Why TrustHireBrain?
 
-The following diagram maps the structural interactions between the frontend SPA, the core FastAPI orchestrator, and database engines:
+| Feature Dimension | Traditional ATS | TrustHireBrain (THB) |
+| :--- | :--- | :--- |
+| **Match Mode** | Keyword Matching | Requirement Intelligence Engine |
+| **Scoring Target** | Resume Similarity | Real Hiring Potential Rating |
+| **Skill Understanding** | Static Strings | Dynamic Skill Graph Inference |
+| **Explainability** | Black Box | Explainable AI Breakdown & Evidence |
+| **Profile Integrity** | Single Flat Score | Multi-Intelligence Profile Dimensions |
+| **Trust Layer** | No Trust Verification | Credentials & Experience Trust Validation |
+| **Career Analytics** | No Career Analysis | Career Evolution & Promotion Trajectory |
+| **Uncertainty** | No Confidence Metrics | Confidence Estimation Percentage |
+
+---
+
+## 5. Feature Catalog
+
+### 📋 Requirement Intelligence
+*   **Multi-Format Upload:** Direct support for drag-and-drop file uploads (`.pdf`, `.docx`, `.txt`) or manual text entry.
+*   **Requirement Graph:** Visual SVG network representation of skills dependency mapping.
+*   **Weight Customization:** Real-time editing of parsed skill priorities (Critical, Important, Preferred) and weight scores.
+
+### 👤 Candidate Intelligence
+*   **Dynamic Parsing:** Automated parsing of candidate profiles directly into relational models.
+*   **Career & Tech Timeline:** Chronological mapping of roles, promotions, and technology stack adoptions.
+*   **Knowledge Graph:** Semantic inference linking self-declared skills with related auxiliary frameworks.
+
+### 🧠 Decision & Match Intelligence
+*   **Hiring Potential Engine:** Dynamically calculates candidate fit by mapping profile strength against JD requirement graphs.
+*   **Trust Score Validation:** Heuristic verification of experience alignment, career gaps, and skill validation.
+*   **Confidence Estimation:** Provides a confidence metric for each rating to reflect match certainty.
+*   **Explainable Evidence Notes:** Generates real-time textual explanations of candidate strengths and risks.
+
+### 📊 Platform Analytics & Dashboard
+*   **Real-time Shortlist:** Dynamic ranking list updating instantly when sliders are adjusted.
+*   **Visualization Suite:** Recharts-powered graphs showing experience ranges, trust score spreads, and skill distribution.
+*   **Detailed Drawers:** Pop-out detail views showing a deep dive into candidate profiles.
+*   **Side-by-Side Comparison:** Interactive side-by-side comparison modal for candidate matching metrics.
+
+---
+
+## 6. Screenshots & Workspace Views
+
+### 1. Interactive Main Dashboard
+![Main Dashboard](assets/media__1782991909319.png)
+
+### 2. Live Dynamic Analysis Workspace
+![New Analysis Pipeline Workspace](assets/media__1782991931596.png)
+
+### 3. Job Description Parser & Skill Graph Priority Table
+![Job Description Requirement Intelligence](assets/media__1782992364438.png)
+
+---
+
+## 7. System Architecture
+
+THB's backend and frontend are strictly separated to support high-throughput AI inference pipelines and real-time state synchronization:
 
 ```mermaid
 graph TD
-    %% Frontend Layer
-    subgraph Frontend [Next.js 15 Client SPA]
-        A[Dashboard UI] <--> B[State Managers & API hooks]
-        B <--> C[Framer Motion & Recharts]
+    subgraph Frontend [Next.js 15 Client Client]
+        UI[Interactive UI & Charts]
+        State[State Manager]
+        Fetch[API Fetch Client]
     end
 
-    %% Network Boundary
-    B <== REST / JSON ==> D[FastAPI Route Controllers]
-
-    %% Backend Layer
-    subgraph Backend [FastAPI Core Services]
-        D --> E[Scoring Calculation Engine]
-        D --> F[Requirement Parser Engine]
-        E --> G[NLP spaCy Tokenizer]
-        F --> H[NetworkX Graph Generator]
+    subgraph Backend [FastAPI Server Core]
+        API[Router Controllers]
+        Scoring[Hiring Potential Calculator]
+        Graph[Requirement Graph Engine]
+        DB_Layer[SQLAlchemy Database Session]
     end
 
-    %% Storage Layer
-    subgraph Storage [Persistent Storage]
-        E <--> I[(SQLite DB / thb_dev.db)]
-        F <--> I
+    subgraph Storage [Database]
+        SQLite[(SQLite Database File)]
     end
 
-    classDef front fill:#1f1f2e,stroke:#7C3AED,stroke-width:2px,color:#fff;
-    classDef back fill:#0f1a1a,stroke:#009688,stroke-width:2px,color:#fff;
-    classDef store fill:#181024,stroke:#003B57,stroke-width:2px,color:#fff;
-    class A,B,C front;
-    class D,E,F,G,H back;
-    class I store;
+    UI <--> State
+    State <--> Fetch
+    Fetch <== REST JSON ==> API
+    API <--> Scoring
+    API <--> Graph
+    Scoring <--> DB_Layer
+    Graph <--> DB_Layer
+    DB_Layer <--> SQLite
 ```
 
 ---
 
-## 📂 Directory Structure
+## 8. Candidate Intelligence Profile Dimensions
+
+To build a holistic view, THB evaluates candidate profiles across 8 core dimensions:
+
+1.  **Technical Intelligence:** Verifiable depth in core programming stacks, libraries, and architecture frameworks.
+2.  **Leadership Intelligence:** Management experience, mentorship history, team-leading metrics, and ownership signals.
+3.  **Trust Intelligence:** Verification indicator assessing career consistency, credentials, and anomaly detection.
+4.  **Learning Intelligence:** Adaptability rating reflecting self-taught skills, transition speeds, and stack changes.
+5.  **Innovation Intelligence:** Patents, open-source contributions, research publications, and product launch history.
+6.  **Behavioural Intelligence:** Interpersonal qualities, collaboration signals, and role communication alignment.
+7.  **Career Intelligence:** Progression speed, promotion intervals, and company growth trajectories.
+8.  **Execution Intelligence:** Hands-on product delivery, system scaling metrics, and project ownership signals.
+
+---
+
+## 9. Project Execution Workflow
+
+```text
+[1. Upload/Paste JD] ──> [2. Parse Requirements & Graph] ──> [3. Setup Weights Sliders]
+                                                                     │
+                                                                     ▼
+[6. Export Excel/PDF] <── [5. View Recalculated Shortlist] <── [4. Execute Scoring Engine]
+```
+
+---
+
+## 10. Technologies & Frameworks
+
+| Layer | Technology / Library | Role in Platform |
+| :--- | :--- | :--- |
+| **Frontend** | Next.js 15 (Turbopack) | Dynamic Single Page UI |
+| **Backend** | FastAPI (Python 3.12) | Real-time REST API Server |
+| **Database** | SQLite (SQLAlchemy ORM) | Relational candidate data and logs |
+| **NLP & Text** | spaCy (`en_core_web_sm`) | Keyword, noun, and skill extraction |
+| **Graph Network** | NetworkX | Skill dependency modeling |
+| **Data Engine** | Pandas / NumPy | Tabular analysis & scoring matrix transformations |
+| **Visual Charts** | Recharts (React) | High-fidelity data visualization |
+| **Styling** | TailwindCSS & Shadcn/UI | Modern Glassmorphic Dashboard Design |
+
+---
+
+## 11. Folder Structure
 
 ```text
 d:\THB/
+├── assets/                # README screenshot assets
 ├── backend/
 │   ├── app/
-│   │   ├── api/          # FastAPI route endpoint controllers
-│   │   ├── core/         # Settings, cors configs, logging
-│   │   ├── db/           # Session management & seed routines
-│   │   ├── engines/      # AI engine modular stubs (NLP, Vector, Graph, Scoring)
-│   │   ├── models/       # Database SQLAlchemy models
-│   │   └── main.py       # FastAPI main startup application hook
+│   │   ├── api/          # Route endpoint controllers (v1/)
+│   │   ├── core/         # Settings, cors configurations
+│   │   ├── db/           # SQLite database setup and initial seeds
+│   │   ├── engines/      # Modular AI engines (NLP, Vector, Graph, Scoring)
+│   │   ├── models/       # Database tables (Candidate, JobDescription, etc.)
+│   │   └── main.py       # FastAPI application root startup hook
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── app/          # Next.js pages workspace (App Router)
-│   │   ├── components/   # Modular, responsive UI components
-│   │   ├── context/      # Theme contexts (light/dark glassmorphism)
-│   │   ├── lib/          # API fetch wrapper helper utilities
-│   │   └── types/        # TypeScript structural models
+│   │   ├── app/          # Next.js page routes (dashboard, compare, etc.)
+│   │   ├── components/   # Reusable UI widgets and layout modules
+│   │   ├── context/      # Color themes management contexts
+│   │   ├── lib/          # API fetch wrappers
+│   │   └── types/        # TypeScript structural types
 │   ├── next.config.ts
 │   ├── Dockerfile
 │   └── package.json
@@ -99,42 +210,32 @@ d:\THB/
 
 ---
 
-## 🛠️ Local Setup & Getting Started
+## 12. Local Installation & Setup
 
-### Method 1: Docker Compose (Recommended)
-
-To run the full stack (Frontend, Backend, and Database seeding) in a unified environment:
-
+### Running with Docker Compose (Recommended)
 1.  Clone the repository and run:
     ```bash
     docker compose up --build
     ```
-2.  Open `http://localhost:3000` in your web browser.
+2.  Navigate to `http://localhost:3000` in your web browser.
 
 ---
 
-### Method 2: Manual Installation
+### Manual Dev Execution
 
 #### 1. Setup Backend
 1.  Navigate to the backend directory:
     ```bash
     cd backend
     ```
-2.  Create and activate a virtual environment:
-    ```bash
-    python -m venv venv
-    .\venv\Scripts\activate  # On Windows
-    source venv/bin/activate  # On macOS/Linux
-    ```
-3.  Install python package dependencies:
+2.  Install dependencies:
     ```bash
     pip install -r requirements.txt
     ```
-4.  Start the development server:
+3.  Launch the FastAPI server:
     ```bash
     uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
     ```
-    *Note: On startup, the SQLite database `thb_dev.db` is auto-initialized and seeded with standard candidate records if empty.*
 
 #### 2. Setup Frontend
 1.  Navigate to the frontend directory:
@@ -145,7 +246,7 @@ To run the full stack (Frontend, Backend, and Database seeding) in a unified env
     ```bash
     npm install
     ```
-3.  Start Next.js dev compiler:
+3.  Launch Next.js:
     ```bash
     npm run dev
     ```
@@ -153,43 +254,46 @@ To run the full stack (Frontend, Backend, and Database seeding) in a unified env
 
 ---
 
-## 📡 REST API Reference
+## 13. Research & Engineering Innovation
 
-| Method | Endpoint | Description | Request Body / Parameters |
-| :--- | :--- | :--- | :--- |
-| **GET** | `/api/v1/dashboard/metrics` | Retrieve aggregated platform metrics counters | None |
-| **GET** | `/api/v1/dashboard/progress` | Get active stepper evaluation progress percentages | None |
-| **GET** | `/api/v1/dashboard/job-description` | Get current active job description and skill weights | None |
-| **POST** | `/api/v1/dashboard/job-description` | Create or update active job description | `{title, location, department, experience_required, description}` |
-| **PUT** | `/api/v1/dashboard/job-description/skill/{skill_id}` | Edit weight or priority type of a job description skill | `{type, score}` |
-| **GET** | `/api/v1/candidates` | Get filtered list of candidates from DB | `search`, `status`, `minExperience`, `minTrust`, `minPotential` |
-| **POST** | `/api/v1/candidates` | Register a new candidate profile into database | `{name, yoe, role, company, location, trust_score, hiring_potential, ...}` |
-| **POST** | `/api/v1/dashboard/analysis/start` | Trigger matching algorithm with custom sliders weights | `{technical_weight, leadership_weight, trust_weight, learning_weight, ...}` |
-| **GET** | `/api/v1/analytics` | Retrieve analytics chart data lists | None |
+Instead of relying on standard wrapper APIs, THB leverages custom, modular pipeline components:
+*   **Requirement Intelligence Engine:** Uses NetworkX to build a skill dependency graph, assigning weights based on context and priority tags.
+*   **Skill Inference Engine:** Extends raw profile listings by scanning professional summaries semantically using spaCy tokenization.
+*   **Career Evolution Analysis:** Models promotion paths and YOE ratios to weigh candidates who progress faster.
+*   **Trust Validator:** Analyzes employment timelines, matching consistency checks against credentials to verify experience integrity.
 
 ---
 
-## 🌐 Deployment Instructions
+## 14. Scale & Production Roadmap
 
-Deploy the application to cloud hosting platforms for public access:
+```text
+Hackathon Phase (Dev Mode) ──> Beta Testing ──> Production SaaS ──> Enterprise Integration
+   [SQLite DB, Local Files]      [PostgreSQL,    [Docker Compose,   [Single Sign-On (SSO),
+                                  Redis Cache]    Vector Indexes]    Enterprise Integrations]
+```
 
-### 1. Backend (FastAPI + SQLite) on Render
-1.  Go to [Render](https://render.com) and create a new **Web Service**.
-2.  Connect your GitHub repository.
-3.  Configure:
-    *   **Root Directory:** `backend`
-    *   **Environment:** `Docker` (Render reads `backend/Dockerfile` automatically)
-    *   **Instance Type:** `Free`
-4.  Click **Deploy Web Service** and copy your deployment URL (e.g. `https://thb-backend.onrender.com`).
+*   **Dev Mode:** Light SQLite relational files for fast local execution.
+*   **Production:** PostgreSQL backend with Redis caching clusters and pgvector indexes to accelerate candidate vector matches.
 
-### 2. Frontend (Next.js) on Vercel
-1.  Go to [Vercel](https://vercel.com) and create a **New Project**.
-2.  Connect your GitHub repository.
-3.  Configure:
-    *   **Framework Preset:** `Next.js`
-    *   **Root Directory:** `frontend`
-    *   **Environment Variables:** Add `NEXT_PUBLIC_API_URL` pointing to your Render backend API (e.g., `https://thb-backend.onrender.com/api/v1`).
-4.  Click **Deploy**.
+---
+
+## 15. Engineering Decisions
+
+We designed TrustHireBrain around clean engineering decisions rather than coincidental hacks:
+
+| Decision | Why We Chose It |
+| :--- | :--- |
+| **Modular Engine Architecture** | Allows independent enhancement of NLP, vector, graph, and scoring engines. |
+| **Explainable Scoring System** | Recruiters need clear evidence reports, not just black-box scores. |
+| **Requirement Graph Mapping** | Captures structured relationship matrices between adjacent technologies. |
+| **Confidence Estimation** | Quantifies matches to flag candidates with insufficient evidence. |
+| **Next.js 15 + Turbopack** | Provides sub-second hot reloading speeds and modern Server Components structure. |
+
+---
+
+## 👥 The Team
+*   **Gurleen** — Principal Software Architect & AI Engineer
+    *   [GitHub Profile](https://github.com/Gurleen12star)
 
 ---
 
