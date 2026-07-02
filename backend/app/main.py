@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 
 from app.core.config import settings
-from app.api.v1.endpoints import dashboard
+from app.api.v1.endpoints import dashboard, jobs
 from app.db.session import engine, Base, SessionLocal
 from app.db.seed import seed_db
 from app.models.database import Candidate
@@ -26,6 +26,7 @@ app.add_middleware(
 # Include Routers
 app.include_router(dashboard.router, prefix=f"{settings.API_V1_STR}/dashboard", tags=["dashboard"])
 app.include_router(dashboard.router, prefix=f"{settings.API_V1_STR}", tags=["candidates"])
+app.include_router(jobs.router, prefix=f"{settings.API_V1_STR}/jobs", tags=["jobs"])
 
 @app.on_event("startup")
 def on_startup():

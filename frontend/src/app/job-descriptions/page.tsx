@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { getJobDescription } from "@/lib/api";
-import { JobDescription } from "@/types";
+import { getJobDescription, parseJobDescription } from "@/lib/api";
+import { JobDescription, ParseResponse } from "@/types";
 import { 
   FileText, UploadCloud, CheckCircle2, ChevronRight, AlertCircle, Sparkles, Terminal, Code 
 } from "lucide-react";
@@ -44,6 +44,7 @@ export default function JobDescriptionsPage() {
   const [parseStep, setParseStep] = useState(0);
   const [selectedNode, setSelectedNode] = useState<string | null>("LLM");
   const [showJson, setShowJson] = useState(false);
+  const [parsedData, setParsedData] = useState<ParseResponse | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -68,10 +69,20 @@ export default function JobDescriptionsPage() {
     setDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
+    
+    // Start animation
     simulateParsing();
+    
+    // Call backend API
+    try {
+      const data = await parseJobDescription();
+      setParsedData(data);
+    } catch (error) {
+      console.error("Parse failed", error);
+    }
   };
 
   const simulateParsing = () => {
@@ -88,6 +99,16 @@ export default function JobDescriptionsPage() {
       });
     }, 900);
   };
+
+  const currentPieData = parsedData ? [
+    { name: "Technical", value: parsedData.weight_distribution.technical || 45, color: "#6366f1" },
+    { name: "Soft Skills", value: parsedData.weight_distribution.soft_skills || 15, color: "#10b981" },
+    { name: "Leadership", value: parsedData.weight_distribution.leadership || 10, color: "#f59e0b" },
+    { name: "Cloud", value: parsedData.weight_distribution.cloud || 15, color: "#06b6d4" },
+    { name: "AI", value: parsedData.weight_distribution.ai || 15, color: "#ec4899" }
+  ] : PIE_DATA;
+
+  const currentGraphNodes = parsedData ? parsedData.graph_nodes : GRAPH_NODES;
 
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-200">
@@ -127,11 +148,11 @@ export default function JobDescriptionsPage() {
               </div>
               <pre className="overflow-x-auto leading-relaxed">
 {JSON.stringify({
-  required_skills: ["Python", "LLM / NLP", "Machine Learning", "PyTorch"],
-  preferred_skills: ["Vector Databases", "Docker"],
-  soft_skills: ["Product Strategy", "Technical Communication", "Mentorship"],
-  experience_required: 6,
-  weight_distribution: {
+  required_skills: parsedData?.required_skills || ["Python", "LLM / NLP", "Machine Learning", "PyTorch"],
+  preferred_skills: parsedData?.preferred_skills || ["Vector Databases", "Docker"],
+  soft_skills: parsedData?.soft_skills || ["Product Strategy", "Technical Communication", "Mentorship"],
+  experience_required: parsedData?.experience_required || "6+ Yrs",
+  weight_distribution: parsedData?.weight_distribution || {
     technical: 45,
     soft_skills: 15,
     leadership: 10,
@@ -152,7 +173,10 @@ export default function JobDescriptionsPage() {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  onClick={simulateParsing}
+                  onClick={() => {
+                    // Start animation & api call when clicked
+                    handleDrop({ preventDefault: () => {} } as any);
+                  }}
                   className={`border-2 border-dashed rounded-[24px] p-8 text-center cursor-pointer transition-all duration-200 select-none ${
                     dragging ? "border-primary bg-primary/5 scale-[0.99]" : "border-border hover:border-primary/50 bg-card hover:shadow-sm"
                   }`}
@@ -191,13 +215,19 @@ export default function JobDescriptionsPage() {
 
                 {/* Requirement Summary metrics */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 select-none">
-                  {[
+                  {(parsedData ? [
+                    { label: "Required Skills", val: parsedData.required_skills.length, color: "text-primary bg-primary/10" },
+                    { label: "Preferred", val: parsedData.preferred_skills.length, color: "text-blue-500 bg-blue-500/10" },
+                    { label: "Soft Skills", val: parsedData.soft_skills.length, color: "text-emerald-500 bg-emerald-500/10" },
+                    { label: "Responsibilities", val: 15, color: "text-amber-500 bg-amber-500/10" },
+                    { label: "Experience", val: parsedData.experience_required, color: "text-pink-500 bg-pink-500/10" }
+                  ] : [
                     { label: "Required Skills", val: 18, color: "text-primary bg-primary/10" },
                     { label: "Preferred", val: 9, color: "text-blue-500 bg-blue-500/10" },
                     { label: "Soft Skills", val: 6, color: "text-emerald-500 bg-emerald-500/10" },
                     { label: "Responsibilities", val: 15, color: "text-amber-500 bg-amber-500/10" },
                     { label: "Experience", val: "6+ Yrs", color: "text-pink-500 bg-pink-500/10" }
-                  ].map((m, i) => (
+                  ]).map((m, i) => (
                     <div key={i} className="bg-card border border-border rounded-2xl p-4 flex flex-col justify-between h-[100px] transition-colors duration-200">
                       <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider leading-none">
                         {m.label}
@@ -223,12 +253,12 @@ export default function JobDescriptionsPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/50 text-foreground/80">
-                        {[
+                        {(parsedData ? parsedData.skill_priority : [
                           { name: "Python", priority: "Critical", weight: 10, category: "Programming", color: "text-rose-500 bg-rose-500/10 border-rose-500/20" },
                           { name: "LLM / NLP", priority: "Critical", weight: 10, category: "AI", color: "text-rose-500 bg-rose-500/10 border-rose-500/20" },
                           { name: "Docker", priority: "High", weight: 8, category: "DevOps", color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
                           { name: "Kubernetes", priority: "Medium", weight: 6, category: "Cloud", color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
-                        ].map((row, i) => (
+                        ]).map((row, i) => (
                           <tr key={i} className="hover:bg-secondary/10">
                             <td className="py-3 font-black text-foreground">{row.name}</td>
                             <td className="py-3">
@@ -257,7 +287,7 @@ export default function JobDescriptionsPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={PIE_DATA}
+                          data={currentPieData}
                           cx="50%"
                           cy="50%"
                           innerRadius={55}
@@ -265,7 +295,7 @@ export default function JobDescriptionsPage() {
                           paddingAngle={3}
                           dataKey="value"
                         >
-                          {PIE_DATA.map((entry, index) => (
+                          {currentPieData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
@@ -295,7 +325,7 @@ export default function JobDescriptionsPage() {
                       </defs>
 
                       {/* Nodes positions mapping */}
-                      {Object.keys(GRAPH_NODES).map((node, i) => {
+                      {Object.keys(currentGraphNodes).map((node, i) => {
                         const x = 25 + i * 58;
                         const y = 40;
                         const isSelected = selectedNode === node;
@@ -346,7 +376,7 @@ export default function JobDescriptionsPage() {
                         <div className="flex flex-col">
                           <span className="font-bold text-[10px] text-foreground uppercase tracking-wider">{selectedNode} Detail</span>
                           <p className="text-[11px] text-muted-foreground font-medium mt-1 leading-relaxed">
-                            {GRAPH_NODES[selectedNode as keyof typeof GRAPH_NODES]}
+                            {currentGraphNodes[selectedNode as keyof typeof currentGraphNodes]}
                           </p>
                         </div>
                       </div>
@@ -355,16 +385,25 @@ export default function JobDescriptionsPage() {
                 </div>
 
                 {/* AI Suggestions Box */}
-                <div className="bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 rounded-[24px] p-5 flex gap-3 select-none">
-                  <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">AI Suggestion</span>
-                    <h5 className="font-bold text-xs text-foreground">Missing Cloud Integration Requirements</h5>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
-                      No cloud experience was found in the job text description. Consider adding **AWS** or **Kubernetes** to help map candidates' orchestration histories properly.
-                    </p>
+                {(parsedData ? parsedData.suggestions : [
+                  {
+                    title: "Missing Cloud Integration Requirements",
+                    description: "No cloud experience was found in the job text description. Consider adding **AWS** or **Kubernetes** to help map candidates' orchestration histories properly.",
+                    type: "warning"
+                  }
+                ]).map((suggestion, idx) => (
+                  <div key={idx} className="bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 rounded-[24px] p-5 flex gap-3 select-none">
+                    <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">AI Suggestion</span>
+                      <h5 className="font-bold text-xs text-foreground">{suggestion.title}</h5>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                        {/* Basic bold rendering: replace **text** with bold tags */}
+                        {suggestion.description.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground">{part}</strong> : part)}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ))}
 
               </div>
 

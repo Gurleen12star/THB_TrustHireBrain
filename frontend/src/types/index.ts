@@ -93,3 +93,24 @@ export interface AnalyticsData {
   experience_distribution: ExperienceDistribution[];
   trust_distribution: TrustDistribution[];
 }
+
+export interface ParseResponse {
+  required_skills: string[];
+  preferred_skills: string[];
+  soft_skills: string[];
+  experience_required: string;
+  weight_distribution: Record<string, number>;
+  skill_priority: Array<{
+    name: string;
+    priority: string;
+    weight: number;
+    category: string;
+    color: string;
+  }>;
+  suggestions: Array<{
+    title: string;
+    description: string;
+    type: string;
+  }>;
+  graph_nodes: Record<string, string>;
+}

@@ -1,4 +1,4 @@
-import { Candidate, Metrics, AnalysisProgress, AnalyticsData, JobDescription } from "@/types";
+import { Candidate, Metrics, AnalysisProgress, AnalyticsData, JobDescription, ParseResponse } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -228,4 +228,29 @@ export async function getCandidateDetails(id: number): Promise<Candidate | null>
 
 export async function getAnalyticsData(): Promise<AnalyticsData> {
   return fetchWithFallback<AnalyticsData>(`${API_BASE_URL}/analytics`, MOCK_ANALYTICS);
+}
+
+export async function parseJobDescription(file?: File): Promise<ParseResponse> {
+  const formData = new FormData();
+  if (file) {
+    formData.append("file", file);
+  } else {
+    formData.append("text", "Mock JD text");
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/jobs/parse`, {
+      method: "POST",
+      body: formData,
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: Status ${res.status}`);
+    }
+    
+    return await res.json() as ParseResponse;
+  } catch (error) {
+    console.error("Failed to parse job description:", error);
+    throw error;
+  }
 }

@@ -71,6 +71,105 @@ def get_job_description(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Job description not found")
     return job
 
+from pydantic import BaseModel
+import datetime
+
+class JobDescriptionCreate(BaseModel):
+    title: str
+    description: str
+    location: str
+    department: str
+    experience_required: str
+
+def parse_skills_from_text(text: str) -> List[dict]:
+    skills = []
+    text_lower = text.lower()
+    
+    if "python" in text_lower:
+        skills.append({"name": "Python", "type": "critical", "score": 98})
+    if "pytorch" in text_lower or "torch" in text_lower:
+        skills.append({"name": "PyTorch", "type": "critical", "score": 95})
+    if "tensorflow" in text_lower or "keras" in text_lower:
+        skills.append({"name": "TensorFlow", "type": "important", "score": 85})
+        
+    if "llm" in text_lower or "language model" in text_lower:
+        skills.append({"name": "LLM / NLP", "type": "critical", "score": 97})
+    if "rag" in text_lower or "retrieval augmented" in text_lower:
+        skills.append({"name": "RAG Architectures", "type": "critical", "score": 96})
+    if "vector" in text_lower or "embedding" in text_lower:
+        skills.append({"name": "Vector Databases", "type": "important", "score": 88})
+    if "scikit" in text_lower or "machine learning" in text_lower:
+        skills.append({"name": "Machine Learning", "type": "important", "score": 85})
+
+    if "docker" in text_lower:
+        skills.append({"name": "Docker", "type": "important", "score": 80})
+    if "kubernetes" in text_lower or "k8s" in text_lower:
+        skills.append({"name": "Kubernetes", "type": "important", "score": 75})
+    if "aws" in text_lower or "amazon web" in text_lower:
+        skills.append({"name": "AWS Cloud", "type": "preferred", "score": 70})
+    if "gcp" in text_lower or "google cloud" in text_lower:
+        skills.append({"name": "GCP Cloud", "type": "preferred", "score": 65})
+        
+    if "fastapi" in text_lower:
+        skills.append({"name": "FastAPI", "type": "nice_to_have", "score": 60})
+    if "react" in text_lower:
+        skills.append({"name": "React.js", "type": "nice_to_have", "score": 55})
+    if "typescript" in text_lower or "ts" in text_lower:
+        skills.append({"name": "TypeScript", "type": "nice_to_have", "score": 50})
+        
+    if not skills:
+        skills = [
+            {"name": "Python", "type": "critical", "score": 90},
+            {"name": "Machine Learning", "type": "important", "score": 80},
+            {"name": "FastAPI", "type": "preferred", "score": 70}
+        ]
+        
+    return skills
+
+@router.post("/job-description", response_model=JobDescriptionSchema)
+def create_job_description(payload: JobDescriptionCreate, db: Session = Depends(get_db)):
+    # 1. Clear previous job descriptions and skills
+    db.query(JobSkill).delete()
+    db.query(JobDescription).delete()
+    db.commit()
+    
+    # 2. Parse skills from text description
+    skills_data = parse_skills_from_text(payload.description)
+    
+    # 3. Create new Job Description
+    new_job = JobDescription(
+        title=payload.title,
+        status="Completed",
+        location=payload.location,
+        department=payload.department,
+        experience_required=payload.experience_required,
+        description=payload.description,
+        created_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
+    
+    db.add(new_job)
+    db.commit()
+    db.refresh(new_job)
+    
+    # 4. Save parsed skills
+    for sk in skills_data:
+        skill_item = JobSkill(
+            job_id=new_job.id,
+            name=sk["name"],
+            type=sk["type"],
+            score=sk["score"]
+        )
+        db.add(skill_item)
+    
+    db.commit()
+    db.refresh(new_job)
+    
+    # 5. Return updated job description
+    job_res = db.query(JobDescription).options(joinedload(JobDescription.skills)).filter(JobDescription.id == new_job.id).first()
+    if not job_res:
+        raise HTTPException(status_code=500, detail="Failed to fetch created job description")
+    return job_res
+
 @router.get("/candidates", response_model=List[CandidateSchema])
 def get_candidates(
     search: Optional[str] = Query(None),
