@@ -87,3 +87,31 @@ d:\THB/
    npm run dev
    ```
 4. Open `http://localhost:3000` in your browser.
+
+---
+
+## Deployment Instructions
+
+To make TrustHireBrain accessible to anyone over the web, you can deploy the Backend and Frontend to cloud hosting platforms for free:
+
+### 1. Deploy Backend (FastAPI) on Render
+1. Go to [Render](https://render.com) and click **New > Web Service**.
+2. Connect your GitHub repository.
+3. Configure the settings:
+   - **Name:** `thb-backend`
+   - **Root Directory:** `backend`
+   - **Environment:** `Docker` (Render will automatically read `backend/Dockerfile` and compile the image)
+   - **Instance Type:** `Free`
+4. Click **Deploy Web Service**.
+*Note: Render will build the container, create the SQLite database, and seed initial candidate data automatically on startup. Copy your public Web Service URL (e.g., `https://thb-backend.onrender.com`).*
+
+### 2. Deploy Frontend (Next.js) on Vercel
+1. Go to [Vercel](https://vercel.com) and click **Add New > Project**.
+2. Connect your GitHub repository.
+3. Configure the settings:
+   - **Framework Preset:** `Next.js`
+   - **Root Directory:** `frontend`
+   - **Environment Variables:**
+     - Add a new environment variable `NEXT_PUBLIC_API_URL` with the value of your Render URL + `/api/v1` (e.g., `https://thb-backend.onrender.com/api/v1`).
+4. Click **Deploy**.
+*Vercel will compile the pages statically and host it publicly. Share the link with anyone to review the platform!*
