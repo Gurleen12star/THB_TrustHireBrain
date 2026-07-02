@@ -224,19 +224,80 @@ def update_job_skill(skill_id: int, payload: SkillUpdate, db: Session = Depends(
 def get_candidates(
     search: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    min_yoe: Optional[float] = Query(None),
+    min_trust: Optional[int] = Query(None),
+    min_potential: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
     query = db.query(Candidate).options(joinedload(Candidate.strengths_risks))
     
     if search:
-        query = query.filter(Candidate.name.ilike(f"%{search}%") | Candidate.role.ilike(f"%{search}%"))
+        query = query.filter(
+            Candidate.name.ilike(f"%{search}%") | 
+            Candidate.role.ilike(f"%{search}%") | 
+            Candidate.location.ilike(f"%{search}%")
+        )
         
     if status and status != "All":
         query = query.filter(Candidate.status == status)
         
-    # Order by rank
+    if min_yoe is not None:
+        query = query.filter(Candidate.yoe >= min_yoe)
+        
+    if min_trust is not None:
+        query = query.filter(Candidate.trust_score >= min_trust)
+        
+    if min_potential is not None:
+        query = query.filter(Candidate.hiring_potential >= min_potential)
+        
+    # Order by rank or hiring potential
     candidates = query.order_by(Candidate.rank.asc()).all()
     return candidates
+
+class CandidateCreate(BaseModel):
+    name: str
+    yoe: float
+    role: str
+    company: Optional[str] = None
+    location: str
+    trust_score: int
+    hiring_potential: int
+    confidence: int
+    recommendation: Optional[str] = None
+    strengths: List[str] = []
+    risks: List[str] = []
+
+@router.post("/candidates", response_model=CandidateSchema)
+def create_candidate(payload: CandidateCreate, db: Session = Depends(get_db)):
+    total = db.query(Candidate).count()
+    new_candidate = Candidate(
+        rank=total + 1,
+        name=payload.name,
+        avatar=f"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
+        yoe=payload.yoe,
+        hiring_potential=payload.hiring_potential,
+        confidence=payload.confidence,
+        trust_score=payload.trust_score,
+        open_to_work=True,
+        role=payload.role,
+        company=payload.company,
+        location=payload.location,
+        recommendation=payload.recommendation or "Highly qualified candidate evaluated by THB.",
+        status="All"
+    )
+    db.add(new_candidate)
+    db.commit()
+    db.refresh(new_candidate)
+
+    for strength in payload.strengths:
+        sr = CandidateStrengthRisk(candidate_id=new_candidate.id, type="strength", content=strength)
+        db.add(sr)
+    for risk in payload.risks:
+        sr = CandidateStrengthRisk(candidate_id=new_candidate.id, type="risk", content=risk)
+        db.add(sr)
+    db.commit()
+    db.refresh(new_candidate)
+    return new_candidate
 
 @router.get("/candidates/{candidate_id}", response_model=CandidateSchema)
 def get_candidate(candidate_id: int, db: Session = Depends(get_db)):
@@ -270,8 +331,7 @@ class AnalysisStartRequest(BaseModel):
 
 @router.post("/analysis/start")
 def start_analysis(payload: AnalysisStartRequest, db: Session = Depends(get_db)):
-    # Reset analysis steps in the database
-    from app.models.database import AnalysisStep, AnalysisTime
+    # 1. Reset analysis steps in the database
     steps = db.query(AnalysisStep).order_by(AnalysisStep.order).all()
     for s in steps:
         if s.order == 1:
@@ -285,8 +345,63 @@ def start_analysis(payload: AnalysisStartRequest, db: Session = Depends(get_db))
         time_info.elapsed_time = "0m 00s"
         time_info.estimated_remaining = "5m 00s"
         time_info.system_status = "Initializing..."
-        
+        time_info.tech_weight = payload.technical_weight
+        time_info.leadership_weight = payload.leadership_weight
+        time_info.trust_weight = payload.trust_weight
+        time_info.learning_weight = payload.learning_weight
+        time_info.behavior_weight = payload.behaviour_weight
+    
     db.commit()
+
+    # 2. RUN ACTUAL MATCHING CALCULATIONS
+    job = db.query(JobDescription).options(joinedload(JobDescription.skills)).first()
+    candidates = db.query(Candidate).options(joinedload(Candidate.strengths_risks)).all()
+
+    if job and job.skills:
+        required_skills = [s.name.lower() for s in job.skills]
+        
+        # Calculate dynamic score for each candidate
+        candidate_scores = []
+        for cand in candidates:
+            # Tech match based on matching strengths
+            cand_strengths = [sr.content.lower() for sr in cand.strengths_risks if sr.type == "strength"]
+            matches = sum(1 for req in required_skills if any(req in strength for strength in cand_strengths))
+            
+            tech_score = (matches / len(required_skills) * 100.0) if required_skills else 75.0
+            
+            # Additional factors
+            trust_score = cand.trust_score
+            leadership_score = cand.confidence
+            yoe_score = min((cand.yoe / 10.0) * 100.0, 100.0)
+            
+            w_tech = payload.technical_weight / 100.0
+            w_trust = payload.trust_weight / 100.0
+            w_lead = payload.leadership_weight / 100.0
+            w_learn = payload.learning_weight / 100.0
+            w_beh = payload.behaviour_weight / 100.0
+            
+            final_score = (
+                w_tech * tech_score +
+                w_trust * trust_score +
+                w_lead * leadership_score +
+                (w_learn + w_beh) * yoe_score
+            )
+            final_score = max(50, min(99, int(final_score)))
+            candidate_scores.append((cand, final_score))
+            
+        # Re-sort candidates based on final score
+        candidate_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        # Update ranks and hiring potential in the DB
+        for index, (cand, score) in enumerate(candidate_scores):
+            rank = index + 1
+            cand.hiring_potential = score
+            cand.rank = rank
+            # Assign status "Top" for top 3, otherwise "All"
+            cand.status = "Top" if rank <= 3 else "All"
+            
+        db.commit()
+
     return {
         "status": "started",
         "weights": {
@@ -300,7 +415,6 @@ def start_analysis(payload: AnalysisStartRequest, db: Session = Depends(get_db))
 
 @router.get("/analysis/replay")
 def get_analysis_replay():
-    # Return 10x replay steps for the frontend animation
     return {
         "frames": [
             {"step": "requirements", "progress": 10, "parsed": 0, "active_node": "LLM System", "message": "Compiling job description requirement nodes..."},
