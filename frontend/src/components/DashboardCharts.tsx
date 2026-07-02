@@ -52,8 +52,17 @@ export default function DashboardCharts({ data }: DashboardChartsProps) {
   const skillColors = ["#3B82F6", "#7C3AED", "#10B981", "#F59E0B", "#9CA3AF"];
   const trustColors = ["#10B981", "#F59E0B", "#EF4444"];
 
+  interface TooltipPayloadItem {
+    name?: string;
+    value?: number;
+    payload: {
+      technology?: string;
+      label?: string;
+    };
+  }
+
   // Recharts custom tooltips
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: TooltipPayloadItem[] }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-popover border border-border p-2.5 rounded-xl shadow-md text-xs font-semibold text-popover-foreground">
