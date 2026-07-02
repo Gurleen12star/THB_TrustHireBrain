@@ -8,6 +8,7 @@ import {
   FileText,
   Users,
   PlusCircle,
+  RotateCcw,
   GitBranch,
   TrendingUp,
   BarChart3,
@@ -33,6 +34,7 @@ const navSections = [
       { name: "Job Descriptions", href: "/job-descriptions", icon: FileText },
       { name: "Candidates", href: "/candidates", icon: Users },
       { name: "New Analysis", href: "/new-analysis", icon: PlusCircle },
+      { name: "Analysis Replay", href: "/analysis-replay", icon: RotateCcw },
     ]
   },
   {
