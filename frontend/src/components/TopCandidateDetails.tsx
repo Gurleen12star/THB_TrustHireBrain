@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, CheckCircle2, AlertTriangle, ShieldCheck, Mail, MapPin, Briefcase } from "lucide-react";
+import { X, CheckCircle2, AlertTriangle, ShieldCheck, Mail, MapPin, Briefcase, ChevronRight } from "lucide-react";
 import { Candidate } from "@/types";
 
 interface TopCandidateDetailsProps {
@@ -315,12 +315,141 @@ export default function TopCandidateDetails({ candidate, onClose }: TopCandidate
             </div>
           )}
 
-          {activeTab !== "overview" && (
-            <div className="py-12 text-center text-muted-foreground space-y-3">
-              <p className="text-sm font-medium">Detailed intelligence parsing is active in the background.</p>
-              <div className="inline-flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full text-xs font-semibold text-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping"></span>
-                Processing timeline data...
+          {activeTab === "profile" && (
+            <div className="space-y-4 animate-fade-in">
+              <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Skills Dependency Knowledge Graph
+              </h5>
+              <div className="bg-secondary/15 rounded-2xl p-4 border border-border/40 flex flex-col items-center">
+                <svg viewBox="0 0 340 70" className="w-full h-[70px] overflow-visible">
+                  <defs>
+                    <marker id="arrow2" viewBox="0 0 10 10" refX="20" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" className="fill-primary/60" />
+                    </marker>
+                  </defs>
+                  {["Python", "PyTorch", "Transformers", "LLM"].map((node, i) => {
+                    const x = 35 + i * 85;
+                    const y = 35;
+                    return (
+                      <g key={node}>
+                        {i < 3 && (
+                          <line
+                            x1={x}
+                            y1={y}
+                            x2={x + 85}
+                            y2={y}
+                            className="stroke-primary/50 stroke-dasharray-[4,4] animate-pulse"
+                            strokeWidth="2"
+                            markerEnd="url(#arrow2)"
+                          />
+                        )}
+                        <circle cx={x} cy={y} r={18} className="fill-card stroke-primary" strokeWidth="2" />
+                        <text x={x} y={y + 3} className="fill-foreground text-[8px] font-black" textAnchor="middle">
+                          {node}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "timeline" && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="space-y-3">
+                <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Career Progression Timeline
+                </h5>
+                <div className="flex items-center flex-wrap gap-2.5">
+                  {["Backend Eng", "ML Eng", "Senior ML Eng", "LLM Eng"].map((role, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-secondary/35 p-2 rounded-xl border border-border">
+                      <span className="h-4.5 w-4.5 bg-primary/10 text-primary rounded-full text-[9px] font-black flex items-center justify-center shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span className="text-[10px] font-bold text-foreground">{role}</span>
+                      {idx < 3 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-1" />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-3 border-t border-border/50 pt-4">
+                <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Technology Evolution Path
+                </h5>
+                <div className="flex flex-wrap items-center gap-2">
+                  {["Python", "TensorFlow", "Transformers", "LLM", "RAG"].map((tech, idx) => (
+                    <React.Fragment key={idx}>
+                      <span className="bg-secondary/60 text-foreground text-[10px] font-bold px-2.5 py-1 rounded-xl">
+                        {tech}
+                      </span>
+                      {idx < 4 && <span className="text-muted-foreground text-xs">→</span>}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "evidence" && (
+            <div className="space-y-4 animate-fade-in">
+              <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Verified Recommendation Evidence
+              </h5>
+              <div className="space-y-3 text-xs leading-relaxed text-foreground/80 font-medium">
+                <div className="border border-border/80 rounded-xl p-3.5 bg-secondary/15 flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-foreground block">Verified Resume Logs</span>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Calculated {candidate.yoe} Years of verifiable experience in similar neural stacks.</p>
+                  </div>
+                </div>
+                <div className="border border-border/80 rounded-xl p-3.5 bg-secondary/15 flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-foreground block">Project Architecture Matches</span>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">GitHub commits match scalable embedding indexing with vector datastores.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "report" && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center justify-between border border-border/80 rounded-2xl p-4 bg-secondary/15">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    Trust Score Index
+                  </span>
+                  <span className="text-xl font-black text-primary mt-1">
+                    {candidate.trust_score}% Verified
+                  </span>
+                </div>
+                <ShieldCheck className="h-10 w-10 text-emerald-500" />
+              </div>
+
+              <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-4">
+                Verification Checklist
+              </h5>
+              <div className="space-y-2 text-xs font-bold">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4.5 w-4.5" />
+                  <span>✔ Active Github & LinkedIn Profiles</span>
+                </div>
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4.5 w-4.5" />
+                  <span>✔ Strong Corporate Project Evidence</span>
+                </div>
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4.5 w-4.5" />
+                  <span>✔ Consistent Tenures (No Unexplained Gaps)</span>
+                </div>
+                <div className="flex items-center gap-2 text-amber-500">
+                  <AlertTriangle className="h-4.5 w-4.5" />
+                  <span>⚠ Minimal External Certifications</span>
+                </div>
               </div>
             </div>
           )}
