@@ -76,9 +76,9 @@ export default function DashboardPage() {
           {/* Dashboard Header Title Row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 select-none">
             <div>
-              <h1 className="text-3xl font-black text-foreground tracking-tight">AI Engineer</h1>
+              <h1 className="text-3xl font-black text-foreground tracking-tight">{job?.title || "AI Engineer"}</h1>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground mt-1 font-medium">
-                <span>Senior AI Engineer with 6+ years of experience in LLM, NLP, and MLOps</span>
+                <span>{job?.description || "Senior AI Engineer with 6+ years of experience in LLM, NLP, and MLOps"}</span>
                 <span className="text-muted-foreground/30">•</span>
                 <button className="text-primary hover:underline font-semibold">View Full JD</button>
               </div>
