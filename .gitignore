@@ -28,3 +28,10 @@ Thumbs.db
 # IDE settings
 .vscode/
 .idea/
+
+# Large challenge dataset files
+/dataset/*India_runs*
+/dataset/*india_runs*
+/dataset/__MACOSX
+/dataset/extracted_jd.txt
+/dataset/parse_jd.py
