@@ -305,14 +305,14 @@ export async function uploadJobDescriptionFile(payload: {
   return await res.json() as JobDescription;
 }
 
-export async function updateJobSkill(skillId: number, payload: { type: string, score: number }): Promise<any> {
+export async function updateJobSkill(skillId: number, payload: { type: string, score: number }): Promise<JobSkill> {
   const res = await fetch(`${API_BASE_URL}/dashboard/job-description/skill/${skillId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
   if (!res.ok) throw new Error("Failed to update job skill weight");
-  return await res.json();
+  return await res.json() as JobSkill;
 }
 
 export async function createCandidate(payload: {
