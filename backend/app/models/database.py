@@ -73,6 +73,11 @@ class AnalysisTime(Base):
     estimated_remaining = Column(String)
     system_status = Column(String)
     progress_percentage = Column(Integer)
+    tech_weight = Column(Float, default=40.0)
+    leadership_weight = Column(Float, default=20.0)
+    trust_weight = Column(Float, default=20.0)
+    learning_weight = Column(Float, default=10.0)
+    behavior_weight = Column(Float, default=10.0)
 
 class TechnologyAdoption(Base):
     __tablename__ = "technology_adoption"
