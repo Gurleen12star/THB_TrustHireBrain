@@ -210,11 +210,20 @@ export async function getJobDescription(): Promise<JobDescription> {
   return fetchWithFallback<JobDescription>(`${API_BASE_URL}/dashboard/job-description`, MOCK_JOB);
 }
 
-export async function getCandidates(search?: string, status?: string): Promise<Candidate[]> {
+export async function getCandidates(
+  search?: string, 
+  status?: string,
+  filters?: { minExperience?: number; minTrust?: number; minPotential?: number }
+): Promise<Candidate[]> {
   let url = `${API_BASE_URL}/candidates`;
   const params = new URLSearchParams();
   if (search) params.append("search", search);
   if (status) params.append("status", status);
+  if (filters) {
+    if (filters.minExperience !== undefined) params.append("min_yoe", filters.minExperience.toString());
+    if (filters.minTrust !== undefined) params.append("min_trust", filters.minTrust.toString());
+    if (filters.minPotential !== undefined) params.append("min_potential", filters.minPotential.toString());
+  }
   if (params.toString()) {
     url += `?${params.toString()}`;
   }
@@ -304,4 +313,26 @@ export async function updateJobSkill(skillId: number, payload: { type: string, s
   });
   if (!res.ok) throw new Error("Failed to update job skill weight");
   return await res.json();
+}
+
+export async function createCandidate(payload: {
+  name: string;
+  yoe: number;
+  role: string;
+  company?: string;
+  location: string;
+  trust_score: number;
+  hiring_potential: number;
+  confidence: number;
+  recommendation?: string;
+  strengths: string[];
+  risks: string[];
+}): Promise<Candidate> {
+  const res = await fetch(`${API_BASE_URL}/candidates`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error("Failed to create candidate");
+  return await res.json() as Candidate;
 }
