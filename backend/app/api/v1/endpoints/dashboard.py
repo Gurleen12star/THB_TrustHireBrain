@@ -109,3 +109,58 @@ def get_analytics(db: Session = Depends(get_db)):
         experience_distribution=exp_dist,
         trust_distribution=trust_dist
     )
+
+from pydantic import BaseModel
+
+class AnalysisStartRequest(BaseModel):
+    technical_weight: int
+    leadership_weight: int
+    trust_weight: int
+    learning_weight: int
+    behaviour_weight: int
+
+@router.post("/analysis/start")
+def start_analysis(payload: AnalysisStartRequest, db: Session = Depends(get_db)):
+    # Reset analysis steps in the database
+    from app.models.database import AnalysisStep, AnalysisTime
+    steps = db.query(AnalysisStep).order_by(AnalysisStep.order).all()
+    for s in steps:
+        if s.order == 1:
+            s.status = "in_progress"
+        else:
+            s.status = "pending"
+    
+    time_info = db.query(AnalysisTime).first()
+    if time_info:
+        time_info.progress_percentage = 0
+        time_info.elapsed_time = "0m 00s"
+        time_info.estimated_remaining = "5m 00s"
+        time_info.system_status = "Initializing..."
+        
+    db.commit()
+    return {
+        "status": "started",
+        "weights": {
+            "technical": payload.technical_weight,
+            "leadership": payload.leadership_weight,
+            "trust": payload.trust_weight,
+            "learning": payload.learning_weight,
+            "behaviour": payload.behaviour_weight
+        }
+    }
+
+@router.get("/analysis/replay")
+def get_analysis_replay():
+    # Return 10x replay steps for the frontend animation
+    return {
+        "frames": [
+            {"step": "requirements", "progress": 10, "parsed": 0, "active_node": "LLM System", "message": "Compiling job description requirement nodes..."},
+            {"step": "requirements", "progress": 20, "parsed": 0, "active_node": "Python", "message": "Linking skill dependency paths..."},
+            {"step": "parsing", "progress": 35, "parsed": 25000, "active_node": "None", "message": "Parsing candidates pool batch 1 (25k)..."},
+            {"step": "parsing", "progress": 50, "parsed": 60000, "active_node": "None", "message": "Parsing candidates pool batch 2 (60k)..."},
+            {"step": "inference", "progress": 65, "parsed": 100000, "active_node": "None", "message": "Inferring technology timeline connections..."},
+            {"step": "scoring", "progress": 80, "parsed": 100000, "active_node": "None", "message": "Evaluating hiring potential scores..."},
+            {"step": "trust", "progress": 90, "parsed": 100000, "active_node": "None", "message": "Verifying candidate career timelines & trust ratios..."},
+            {"step": "done", "progress": 100, "parsed": 100000, "active_node": "None", "message": "Final rankings compiled successfully."}
+        ]
+    }
