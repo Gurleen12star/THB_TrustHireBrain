@@ -93,13 +93,23 @@ Rather than checking for exact string occurrences, THB models candidate suitabil
 ## 6. Screenshots & Workspace Views
 
 ### 1. Interactive Main Dashboard
-![Main Dashboard](assets/media__1782991909319.png)
+<img width="1910" height="904" alt="{089DBBB6-7827-459C-B857-90095C548907}" src="https://github.com/user-attachments/assets/748f6501-1d29-40ee-b63a-d4becf247704" />
+<img width="350" height="822" alt="{A7BD6BCF-4077-4AD7-A8E2-B829012A6ABD}" src="https://github.com/user-attachments/assets/74750dad-b7b1-4918-b9cb-b4d71020eb73" />
+
+
 
 ### 2. Live Dynamic Analysis Workspace
-![New Analysis Pipeline Workspace](assets/media__1782991931596.png)
+<img width="1586" height="830" alt="{CB1BF096-1292-4389-9971-DE69F800AB7E}" src="https://github.com/user-attachments/assets/63163178-e050-4942-812a-b3308b777b9c" />
+<img width="779" height="833" alt="{91F57D78-5256-4BBA-BB63-19CF0BFD367A}" src="https://github.com/user-attachments/assets/608fbb6b-a86a-4aea-ab12-3c8ad94cadd9" />
+<img width="1523" height="820" alt="{EEC04EDE-5D40-42C4-ADB4-BA9AB32F09AD}" src="https://github.com/user-attachments/assets/b71b666a-6177-4834-97c7-dd5163892f13" />
+
+
 
 ### 3. Job Description Parser & Skill Graph Priority Table
-![Job Description Requirement Intelligence](assets/media__1782992364438.png)
+<img width="1590" height="801" alt="{D31E2204-44EC-45F8-A018-C97D922E3F36}" src="https://github.com/user-attachments/assets/892c5fda-0627-41fb-883f-3884a6a58b1c" />
+<img width="1591" height="598" alt="image" src="https://github.com/user-attachments/assets/66b00fee-65dc-4be3-b468-8f2a955b0a3f" />
+
+
 
 ---
 
