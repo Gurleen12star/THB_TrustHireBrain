@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { PlusCircle, Play, Settings2, Database, ShieldAlert, Sparkles } from "lucide-react";
+import { getJobDescription } from "@/lib/api";
 
 const PIPELINE_STEPS = [
   "Reading Job Description",
@@ -36,12 +37,13 @@ const MOCK_ACTIVITY_FEED = [
 
 export default function NewAnalysisPage() {
   const [jd, setJd] = useState("");
+  const [activeJobTitle, setActiveJobTitle] = useState("");
   const [dataset, setDataset] = useState("100k"); // "100k" or "upload"
   
   // Sliders Config
-  const [techWeight, setTechWeight] = useState(45);
+  const [techWeight, setTechWeight] = useState(40);
   const [leaderWeight, setLeaderWeight] = useState(20);
-  const [trustWeight, setTrustWeight] = useState(15);
+  const [trustWeight, setTrustWeight] = useState(20);
   const [learnWeight, setLearnWeight] = useState(10);
   const [behavWeight, setBehavWeight] = useState(10);
 
@@ -57,6 +59,22 @@ export default function NewAnalysisPage() {
   });
   const [activityLogs, setActivityLogs] = useState<string[]>([]);
 
+  // Fetch active Job Description on load
+  useEffect(() => {
+    async function loadActiveJob() {
+      try {
+        const job = await getJobDescription();
+        if (job) {
+          setJd(job.description || "");
+          setActiveJobTitle(job.title || "AI Engineer");
+        }
+      } catch (err) {
+        console.error("No active job description found in DB:", err);
+      }
+    }
+    loadActiveJob();
+  }, []);
+
   const handleStartAnalysis = async () => {
     if (!jd) {
       alert("Please paste or write a Job Description first.");
@@ -69,7 +87,24 @@ export default function NewAnalysisPage() {
     setStats({ parsed: 0, requirements: 0, graphs: 0, skills: 0 });
     setActivityLogs([]);
 
-    // Trigger backend POST call to notify
+    // 1. Sync custom JD text changes to the backend first
+    try {
+      await fetch("http://localhost:8000/api/v1/dashboard/job-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: activeJobTitle || "AI Engineer",
+          location: "Bengaluru, India",
+          department: "AI & Data",
+          experience_required: "6+ Years",
+          description: jd
+        })
+      });
+    } catch (e) {
+      console.warn("Could not save new Job Description to database", e);
+    }
+
+    // 2. Trigger backend calculations with weights configuration
     try {
       await fetch("http://localhost:8000/api/v1/dashboard/analysis/start", {
         method: "POST",
@@ -117,13 +152,13 @@ export default function NewAnalysisPage() {
           clearInterval(interval);
           setTimeout(() => {
             setIsRunning(false);
-            window.location.href = "/dashboard";
+            window.location.href = "/candidates"; // Redirect to recalculated candidate ranks!
           }, 1500);
           return 100;
         }
         return next;
       });
-    }, 150);
+    }, 120);
 
     return () => clearInterval(interval);
   }, [isRunning]);
@@ -154,9 +189,9 @@ export default function NewAnalysisPage() {
             <div className="lg:col-span-6 space-y-6">
               <div className="bg-card border border-border rounded-[24px] p-6 shadow-sm flex flex-col gap-6 select-none">
                 
-                {/* Step 1: paste JD */}
+                {/* Step 1: paste/edit JD */}
                 <div className="flex flex-col gap-1.5">
-                  <h3 className="font-bold text-sm text-foreground">Step 1: Paste Job Description</h3>
+                  <h3 className="font-bold text-sm text-foreground">Step 1: Edit Job Description</h3>
                   <textarea
                     value={jd}
                     onChange={(e) => setJd(e.target.value)}
@@ -248,94 +283,72 @@ export default function NewAnalysisPage() {
                   
                   {/* Progress Status */}
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold text-base text-foreground">THB Analyzing Candidates</h3>
-                      <span className="text-xs text-muted-foreground font-semibold mt-0.5 block">Remaining: 2m 30s</span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] font-black text-primary uppercase tracking-wider">Engine Process</span>
+                      <h4 className="font-bold text-sm text-foreground">{PIPELINE_STEPS[currentStepIdx]}</h4>
                     </div>
-                    <div className="relative h-12 w-12 flex items-center justify-center">
-                      <svg className="w-12 h-12 transform -rotate-90">
-                        <circle cx="24" cy="24" r="20" className="stroke-secondary dark:stroke-secondary/30 fill-none" strokeWidth="4" />
-                        <circle
-                          cx="24"
-                          cy="24"
-                          r="20"
-                          className="stroke-primary fill-none transition-all"
-                          strokeWidth="4"
-                          strokeDasharray={2 * Math.PI * 20}
-                          strokeDashoffset={2 * Math.PI * 20 - (progress / 100) * (2 * Math.PI * 20)}
-                        />
-                      </svg>
-                      <span className="absolute text-[11px] font-black text-foreground">{progress}%</span>
+                    <span className="text-lg font-black text-primary">{progress}%</span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-primary/80 to-primary rounded-full transition-all duration-150" 
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+
+                  {/* Counter Stats Cards */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/40">
+                      <span className="text-[9px] text-muted-foreground font-black uppercase">Candidates Indexed</span>
+                      <span className="block text-lg font-black text-foreground mt-1">{stats.parsed.toLocaleString()}</span>
+                    </div>
+                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/40">
+                      <span className="text-[9px] text-muted-foreground font-black uppercase">Extracted Requirements</span>
+                      <span className="block text-lg font-black text-foreground mt-1">{stats.requirements}</span>
+                    </div>
+                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/40">
+                      <span className="text-[9px] text-muted-foreground font-black uppercase">Knowledge Triples</span>
+                      <span className="block text-lg font-black text-foreground mt-1">{stats.graphs.toLocaleString()}</span>
+                    </div>
+                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/40">
+                      <span className="text-[9px] text-muted-foreground font-black uppercase">Inferred Skills</span>
+                      <span className="block text-lg font-black text-foreground mt-1">{stats.skills.toLocaleString()}</span>
                     </div>
                   </div>
 
-                  {/* High Density stats counters */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-b border-border/50 py-4 text-center font-bold">
-                    <div>
-                      <span className="text-[8px] text-muted-foreground uppercase tracking-wider block">Parsed</span>
-                      <span className="text-sm text-foreground block mt-1">{stats.parsed.toLocaleString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-[8px] text-muted-foreground uppercase tracking-wider block">Requirements</span>
-                      <span className="text-sm text-foreground block mt-1">{stats.requirements}</span>
-                    </div>
-                    <div>
-                      <span className="text-[8px] text-muted-foreground uppercase tracking-wider block">Graphs</span>
-                      <span className="text-sm text-foreground block mt-1">{stats.graphs.toLocaleString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-[8px] text-muted-foreground uppercase tracking-wider block">Skills</span>
-                      <span className="text-sm text-foreground block mt-1">{stats.skills.toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  {/* 12-Step checklist */}
-                  <div className="grid grid-cols-2 gap-3 text-xs font-semibold">
-                    {PIPELINE_STEPS.map((step, idx) => {
-                      const isDone = currentStepIdx > idx;
-                      const isCurrent = currentStepIdx === idx;
-                      return (
-                        <div key={idx} className="flex items-center gap-2 p-2 rounded-xl border border-border/30 bg-secondary/10">
-                          {isDone ? (
-                            <span className="h-4.5 w-4.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full flex items-center justify-center font-bold text-[9px]">✔</span>
-                          ) : isCurrent ? (
-                            <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
-                          ) : (
-                            <span className="h-2 w-2 rounded-full bg-secondary/60" />
-                          )}
-                          <span className={`${isDone ? "text-foreground" : isCurrent ? "text-primary font-bold" : "text-muted-foreground"}`}>
-                            {step}
-                          </span>
+                  {/* Terminal Activities Feed */}
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[9px] text-muted-foreground font-black uppercase">Active Console Output</span>
+                    <div className="bg-black/95 text-emerald-400 font-mono text-[10px] p-4 rounded-2xl border border-border/60 max-h-[140px] overflow-y-auto space-y-1.5 leading-relaxed">
+                      {activityLogs.map((log, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <span className="text-zinc-600 select-none">[LOG]</span>
+                          <span>{log}</span>
                         </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Live Activity Feed */}
-                  <div className="bg-black text-emerald-400 font-mono text-[10px] p-4 rounded-2xl h-[160px] overflow-y-auto space-y-2">
-                    {activityLogs.map((log, i) => (
-                      <div key={i} className="flex gap-1.5">
-                        <span className="text-muted-foreground">↓</span>
-                        <span>{log}</span>
+                      ))}
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                        <span className="text-zinc-400">awaiting task response...</span>
                       </div>
-                    ))}
-                    <div className="h-1.5 w-1.5 bg-emerald-400 animate-pulse inline-block" />
+                    </div>
                   </div>
 
                 </div>
               ) : (
-                /* Prompt Box */
-                <div className="bg-card border border-border rounded-[24px] p-8 text-center flex flex-col items-center justify-center h-full min-h-[300px] select-none text-muted-foreground">
+                <div className="bg-card border border-border rounded-[24px] p-6 shadow-sm flex flex-col items-center justify-center text-center p-12 min-h-[300px] select-none">
                   <ShieldAlert className="h-12 w-12 text-muted-foreground/60 mb-3" />
-                  <h4 className="font-bold text-sm text-foreground">Waiting for analysis trigger</h4>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-xs leading-relaxed font-medium">
-                    Configure your job description and custom models above, then click **Start THB Analysis** to watch the parsing steps live.
+                  <h4 className="font-bold text-sm text-foreground">Pipeline Inactive</h4>
+                  <p className="text-xs text-muted-foreground max-w-[280px] mt-1 leading-relaxed">
+                    Set up your sliders configuration weights and press start to execute the scoring engine.
                   </p>
                 </div>
               )}
             </div>
 
           </div>
+
         </main>
       </div>
     </div>
