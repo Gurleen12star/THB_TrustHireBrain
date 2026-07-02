@@ -4,11 +4,11 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { 
-  getJobDescription, createJobDescription, uploadJobDescriptionFile 
+  getJobDescription, createJobDescription, uploadJobDescriptionFile, updateJobSkill 
 } from "@/lib/api";
 import { JobDescription } from "@/types";
 import { 
-  FileText, UploadCloud, CheckCircle2, AlertCircle, Sparkles, Code, Keyboard, FileUp 
+  FileText, UploadCloud, CheckCircle2, AlertCircle, Sparkles, Code, Keyboard, FileUp, Edit2, Check, X 
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
@@ -51,6 +51,11 @@ export default function JobDescriptionsPage() {
   const [parseStep, setParseStep] = useState(0);
   const [selectedNode, setSelectedNode] = useState<string | null>("LLM");
   const [showJson, setShowJson] = useState(false);
+
+  // Inline editing states
+  const [editingSkillId, setEditingSkillId] = useState<number | null>(null);
+  const [editingType, setEditingType] = useState<string>("");
+  const [editingScore, setEditingScore] = useState<number>(0);
 
   async function loadData() {
     try {
@@ -141,6 +146,28 @@ export default function JobDescriptionsPage() {
     });
   };
 
+  const startEditing = (skill: any) => {
+    setEditingSkillId(skill.id);
+    setEditingType(skill.type);
+    setEditingScore(skill.score);
+  };
+
+  const handleSaveSkill = async (skillId: number) => {
+    try {
+      const updatedSkill = await updateJobSkill(skillId, {
+        type: editingType,
+        score: Number(editingScore)
+      });
+      if (job) {
+        const updatedSkills = job.skills.map(s => s.id === skillId ? { ...s, ...updatedSkill } : s);
+        setJob({ ...job, skills: updatedSkills });
+      }
+      setEditingSkillId(null);
+    } catch (error) {
+      console.error("Failed to save skill details", error);
+    }
+  };
+
   // Compile Dynamic Pie Chart data from active database skills list
   const getPieData = () => {
     if (!job || !job.skills || job.skills.length === 0) {
@@ -151,7 +178,7 @@ export default function JobDescriptionsPage() {
     }
     const categories = { critical: 0, important: 0, preferred: 0, nice_to_have: 0 };
     job.skills.forEach(s => {
-      const type = s.type.toLowerCase().replace(/_/g, "_");
+      const type = s.type.toLowerCase();
       if (type.includes("critical")) categories.critical++;
       else if (type.includes("important")) categories.important++;
       else if (type.includes("preferred")) categories.preferred++;
@@ -159,7 +186,7 @@ export default function JobDescriptionsPage() {
     });
 
     return [
-      { name: "Critical Priorities", value: categories.critical || 1, color: "#6366f1" },
+      { name: "Critical Priorities", value: categories.critical || 0, color: "#6366f1" },
       { name: "Important Priorities", value: categories.important || 0, color: "#10b981" },
       { name: "Preferred Priorities", value: categories.preferred || 0, color: "#f59e0b" },
       { name: "Nice to Have", value: categories.nice_to_have || 0, color: "#06b6d4" }
@@ -379,25 +406,83 @@ export default function JobDescriptionsPage() {
                           <tr className="border-b border-border/80 text-[10px] text-muted-foreground uppercase tracking-wider">
                             <th className="pb-3">Skill</th>
                             <th className="pb-3">Priority</th>
-                            <th className="pb-3">Confidence</th>
+                            <th className="pb-3">Weight (0-100)</th>
+                            <th className="pb-3 text-right">Action</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border/50 text-foreground/80">
-                          {job.skills.map((s) => (
-                            <tr key={s.id} className="hover:bg-secondary/15">
-                              <td className="py-3 font-black text-foreground">{s.name}</td>
-                              <td className="py-3 capitalize">
-                                <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black ${
-                                  s.type.includes("critical") ? "text-rose-500 bg-rose-500/10 border-rose-500/20" :
-                                  s.type.includes("important") ? "text-amber-500 bg-amber-500/10 border-amber-500/20" :
-                                  "text-blue-500 bg-blue-500/10 border-blue-500/20"
-                                }`}>
-                                  {s.type.replace(/_/g, " ")}
-                                </span>
-                              </td>
-                              <td className="py-3 text-primary font-bold">{s.score}%</td>
-                            </tr>
-                          ))}
+                          {job.skills.map((s) => {
+                            const isEditing = editingSkillId === s.id;
+                            return (
+                              <tr key={s.id} className="hover:bg-secondary/15">
+                                <td className="py-3 font-black text-foreground">{s.name}</td>
+                                <td className="py-3">
+                                  {isEditing ? (
+                                    <select
+                                      value={editingType}
+                                      onChange={(e) => setEditingType(e.target.value)}
+                                      className="bg-secondary border border-border rounded-lg p-1 text-[10px] font-semibold text-foreground focus:outline-none focus:border-primary"
+                                    >
+                                      <option value="critical">Critical</option>
+                                      <option value="important">Important</option>
+                                      <option value="preferred">Preferred</option>
+                                      <option value="nice_to_have">Nice to Have</option>
+                                    </select>
+                                  ) : (
+                                    <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black capitalize ${
+                                      s.type.includes("critical") ? "text-rose-500 bg-rose-500/10 border-rose-500/20" :
+                                      s.type.includes("important") ? "text-amber-500 bg-amber-500/10 border-amber-500/20" :
+                                      "text-blue-500 bg-blue-500/10 border-blue-500/20"
+                                    }`}>
+                                      {s.type.replace(/_/g, " ")}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3">
+                                  {isEditing ? (
+                                    <input
+                                      type="number"
+                                      value={editingScore}
+                                      onChange={(e) => setEditingScore(Number(e.target.value))}
+                                      min={0}
+                                      max={100}
+                                      className="bg-secondary border border-border rounded-lg p-1 text-[10px] w-14 text-center font-bold text-foreground focus:outline-none focus:border-primary"
+                                    />
+                                  ) : (
+                                    <span className="text-primary font-bold">{s.score}%</span>
+                                  )}
+                                </td>
+                                <td className="py-3 text-right">
+                                  {isEditing ? (
+                                    <div className="flex justify-end gap-1.5">
+                                      <button
+                                        onClick={() => handleSaveSkill(s.id)}
+                                        className="p-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 cursor-pointer"
+                                        title="Save"
+                                      >
+                                        <Check className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingSkillId(null)}
+                                        className="p-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 cursor-pointer"
+                                        title="Cancel"
+                                      >
+                                        <X className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => startEditing(s)}
+                                      className="p-1 rounded-lg hover:bg-secondary/40 text-muted-foreground hover:text-foreground cursor-pointer transition-all"
+                                      title="Edit Priority/Weight"
+                                    >
+                                      <Edit2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
