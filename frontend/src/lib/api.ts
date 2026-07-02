@@ -295,3 +295,13 @@ export async function uploadJobDescriptionFile(payload: {
   if (!res.ok) throw new Error("Failed to upload job description");
   return await res.json() as JobDescription;
 }
+
+export async function updateJobSkill(skillId: number, payload: { type: string, score: number }): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/dashboard/job-description/skill/${skillId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error("Failed to update job skill weight");
+  return await res.json();
+}
